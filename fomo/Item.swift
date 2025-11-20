@@ -90,7 +90,7 @@ extension Item {
     }
     
     @MainActor private func blockLimit() {
-        //
+        BlockController.shared.startLimit(for: self)
     }
     
     @MainActor private func blockOpens() {
@@ -125,7 +125,7 @@ struct ScheduleWindow: Codable {
 }
 
 struct LimitConfig: Codable {
-    var focus: Duration = .init()
+    var freeTime: Duration = .init()
     var breakTime: Duration = .init()
 }
 

@@ -160,8 +160,8 @@ struct EditLimitView: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text("Focus time")
-            EditTimerView(duration: $limitConfig.focus)
+            Text("Free time")
+            EditTimerView(duration: $limitConfig.freeTime)
             Text("Break time")
             EditTimerView(duration: $limitConfig.breakTime)
         }
