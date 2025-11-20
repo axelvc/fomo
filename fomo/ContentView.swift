@@ -60,10 +60,16 @@ struct ContentView: View {
 
 struct EditItemView: View {
     @Bindable var item: Item
+
+    @State private var auth = ScreenTimeAuthorization()
     @State private var showAppPicker = false
     @State private var activitySelection: FamilyActivitySelection = .init()
 
     var body: some View {
+        Button("Enable Screen Time controls") {
+            auth.request()
+        }
+
         Form {
             TextField("Name", text: $item.name)
 
@@ -107,6 +113,10 @@ struct EditItemView: View {
         .navigationTitle("Edit Item")
         .onChange(of: item.repeatOn) {
             print(item.timerDuration)
+        }
+
+        Button("Start block") {
+            item.block()
         }
     }
 }

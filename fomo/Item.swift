@@ -11,6 +11,9 @@ import SwiftData
 
 @Model
 final class Item {
+    @Attribute(.unique)
+    var id: UUID
+    
     var name: String
 
     var apps: Set<ApplicationToken>
@@ -35,6 +38,7 @@ final class Item {
     var notificationOn: Bool
 
     init() {
+        self.id = UUID()
         self.name = ""
         self.apps = []
         self._blockMode = .timer
@@ -46,18 +50,51 @@ final class Item {
         self.limitConfig = .init()
         self.opensConfig = .init()
     }
-
+    
     private func resetLimitMode() {
         switch blockMode {
         case .timer:
-            timerDuration = Duration()
+            timerDuration = .init()
         case .schedule:
-            scheduleWindow = ScheduleWindow()
+            scheduleWindow = .init()
         case .limit:
-            limitConfig = LimitConfig()
+            limitConfig = .init()
         case .opens:
-            opensConfig = OpensConfig()
+            opensConfig = .init()
         }
+    }
+}
+
+extension Item {
+    @MainActor func block() {
+        switch blockMode {
+        case .timer: blockTimer()
+        case .schedule: blockSchedule()
+        case .limit: blockLimit()
+        case .opens: blockOpens()
+        }
+        
+    }
+    
+    @MainActor private func blockTimer() {
+        BlockController.shared.applyBlock(for: apps)
+        
+        Task {
+            try? await Task.sleep(for: .seconds(timerDuration.totalSeconds))
+            BlockController.shared.clearBlock()
+        }
+    }
+    
+    @MainActor private func blockSchedule() {
+        try? BlockController.shared.startSchedule(for: self)
+    }
+    
+    @MainActor private func blockLimit() {
+        //
+    }
+    
+    @MainActor private func blockOpens() {
+        //
     }
 }
 
@@ -78,6 +115,8 @@ enum BlockMode: String, Codable, CaseIterable, Identifiable {
 struct Duration: Codable {
     var hours: Int = 0
     var minutes: Int = 0
+    
+    var totalSeconds: Int { hours * 3600 + minutes * 60 }
 }
 
 struct ScheduleWindow: Codable {
