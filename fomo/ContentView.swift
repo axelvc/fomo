@@ -17,8 +17,10 @@ struct ContentView: View {
         NavigationSplitView {
             List {
                 ForEach(items) { item in
-                    NavigationLink(item.name) {
+                    NavigationLink {
                         EditItemView(item: item)
+                    } label: {
+                        ItemPreview(item: item)
                     }
                     .swipeActions(edge: .trailing) {
                         Button(role: .destructive) {
@@ -59,6 +61,44 @@ struct ContentView: View {
 
             try! modelContext.save()
         }
+    }
+}
+
+struct ItemPreview: View {
+    @Bindable var item: Item
+    
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text(item.name).font(.largeTitle)
+            Text(item.blockMode.title).font(.subheadline)
+            
+            switch item.blockMode {
+            case .timer:
+                Text(formattedDuration(item.timerDuration))
+            case .schedule:
+                let from = item.scheduleWindow.start.formatted(.dateTime.hour().minute())
+                let to = item.scheduleWindow.start.formatted(.dateTime.hour().minute())
+                
+                Text("\(from) - \(to)")
+            case .limit:
+                let freeTime = formattedDuration(item.limitConfig.freeTime)
+                let breakTime = formattedDuration(item.limitConfig.breakTime)
+                
+                Text("Each \(freeTime) take a break of \(breakTime).")
+            case .opens:
+                let opens = item.opensConfig.opens
+                let breakTime = formattedDuration(item.opensConfig.allowedPerOpen)
+                
+                Text("\(opens) opens of \(breakTime) minutes each")
+            }
+        }
+    }
+    
+    private func formattedDuration(_ duration: Duration) -> String {
+        let hour = item.timerDuration.hours.description.padding(toLength: 2, withPad: "0", startingAt: 0)
+        let minute = item.timerDuration.minutes.description.padding(toLength: 2, withPad: "0", startingAt: 0)
+
+        return "\(hour):\(minute)"
     }
 }
 
@@ -115,7 +155,7 @@ struct EditItemView: View {
             Toggle("Repeat", isOn: $item.repeatOn)
             Toggle("Notifications", isOn: $item.notificationOn)
         }
-        .navigationTitle(isNew ? "Edit Item" : "Craete item")
+        .navigationTitle(isNew ? "New item" : "Edit item")
         .onChange(of: item.repeatOn) {
             print(item.timerDuration)
         }
@@ -196,5 +236,22 @@ struct EditOpensView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+        .modelContainer(for: Item.self, inMemory: true, onSetup: { result in
+            guard case .success(let store) = result else { return }
+            
+            let items: [(String, BlockMode)] = [
+                ("Foo", BlockMode.timer),
+                ("Bar", BlockMode.schedule),
+                ("Faz", BlockMode.limit),
+                ("Baz", BlockMode.opens),
+            ]
+            
+            for (name, mode) in items {
+                let item = Item()
+                item.name = name
+                item.blockMode = mode
+
+                store.mainContext.insert(item)
+            }
+        })
 }
