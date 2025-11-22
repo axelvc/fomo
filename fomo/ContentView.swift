@@ -17,10 +17,19 @@ struct ContentView: View {
         NavigationSplitView {
             List {
                 ForEach(items) { item in
-                    NavigationLink {
+                    NavigationLink(item.name) {
                         EditItemView(item: item)
-                    } label: {
-                        Text(item.name)
+                    }
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) {
+                            modelContext.delete(item)
+                            try? modelContext.save()
+                        }
+                        NavigationLink() {
+                            EditItemView(item: item)
+                        } label: {
+                            Label("Edit", systemImage: "pencil")
+                        }
                     }
                 }
                 .onDelete(perform: deleteItems)
@@ -30,7 +39,9 @@ struct ContentView: View {
                     EditButton()
                 }
                 ToolbarItem {
-                    Button(action: addItem) {
+                    NavigationLink {
+                        EditItemView(item: Item())
+                    } label: {
                         Label("Add Item", systemImage: "plus")
                     }
                 }
@@ -39,14 +50,7 @@ struct ContentView: View {
             Text("Select an item")
         }
     }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item()
-            modelContext.insert(newItem)
-        }
-    }
-
+    
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
@@ -60,16 +64,17 @@ struct ContentView: View {
 
 struct EditItemView: View {
     @Bindable var item: Item
+    
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    
+    var isNew: Bool { item.modelContext == nil }
 
     @State private var auth = ScreenTimeAuthorization()
     @State private var showAppPicker = false
     @State private var activitySelection: FamilyActivitySelection = .init()
 
     var body: some View {
-        Button("Enable Screen Time controls") {
-            auth.request()
-        }
-
         Form {
             TextField("Name", text: $item.name)
 
@@ -110,14 +115,20 @@ struct EditItemView: View {
             Toggle("Repeat", isOn: $item.repeatOn)
             Toggle("Notifications", isOn: $item.notificationOn)
         }
-        .navigationTitle("Edit Item")
+        .navigationTitle(isNew ? "Edit Item" : "Craete item")
         .onChange(of: item.repeatOn) {
             print(item.timerDuration)
         }
 
-        Button("Start block") {
-            item.block()
+        Button("Save item") {
+            if isNew {
+                modelContext.insert(item)
+            }
+            
+            try? modelContext.save()
+            dismiss()
         }
+        .disabled(!item.isValid)
     }
 }
 
@@ -184,7 +195,6 @@ struct EditOpensView: View {
 }
 
 #Preview {
-    //    ContentView()
-    EditItemView(item: .init())
+    ContentView()
         .modelContainer(for: Item.self, inMemory: true)
 }

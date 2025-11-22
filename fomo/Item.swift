@@ -66,6 +66,26 @@ final class Item {
 }
 
 extension Item {
+    var isValid: Bool {
+        if name.isEmpty { return false }
+        // if apps.isEmpty { return false }
+        
+        return switch blockMode {
+        case .timer:
+            timerDuration.totalSeconds > 0
+        case .schedule:
+            scheduleWindow.start < scheduleWindow.end
+        case .limit:
+            limitConfig.breakTime.totalSeconds > 0
+            && limitConfig.freeTime.totalSeconds > 0
+        case .opens:
+            opensConfig.opens > 0
+            && opensConfig.allowedPerOpen.totalSeconds > 0
+        }
+    }
+}
+
+extension Item {
     @MainActor func block() {
         switch blockMode {
         case .timer: blockTimer()
