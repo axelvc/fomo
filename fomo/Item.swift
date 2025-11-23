@@ -140,8 +140,12 @@ struct Duration: Codable {
 }
 
 struct ScheduleWindow: Codable {
-    var start: Date = .distantPast
-    var end: Date = .distantFuture
+    var start: Date = emptyDate
+    var end: Date = emptyDate
+    
+    private static var emptyDate: Date {
+        Calendar.current.startOfDay(for: Date())
+    }
 }
 
 struct LimitConfig: Codable {
