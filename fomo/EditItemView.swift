@@ -92,6 +92,7 @@ struct EditItemView: View {
     func saveItem() {
         if isNew {
             modelContext.insert(item)
+            item.block()
         }
 
         try? modelContext.save()
