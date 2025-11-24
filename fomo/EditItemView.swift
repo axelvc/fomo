@@ -73,10 +73,6 @@ struct EditItemView: View {
                             Text(mode.title).tag(mode)
                         }
                     }
-
-                    if item.blockMode != .timer {
-                        Toggle("Repeat", isOn: $item.repeatOn)
-                    }
                 }
             }
 

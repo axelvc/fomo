@@ -34,8 +34,6 @@ final class Item {
     var opensConfig: OpensConfig
 
     var breakMode: BreakMode
-    var repeatOn: Bool
-    var notificationOn: Bool
 
     init() {
         self.id = UUID()
@@ -43,8 +41,6 @@ final class Item {
         self.apps = []
         self._blockMode = .timer
         self.breakMode = .relaxed
-        self.repeatOn = false
-        self.notificationOn = false
         self.timerDuration = .init()
         self.scheduleWindow = .init()
         self.limitConfig = .init()

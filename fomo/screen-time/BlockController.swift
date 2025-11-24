@@ -71,7 +71,7 @@ final class BlockController {
         let schedule = DeviceActivitySchedule(
             intervalStart: startComponents,
             intervalEnd: endComponents,
-            repeats: item.repeatOn
+            repeats: false
         )
 
         try center.startMonitoring(
