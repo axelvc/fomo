@@ -108,10 +108,10 @@ struct ItemPreview: View {
             guard case .success(let store) = result else { return }
             
             let items: [(String, BlockMode)] = [
-                ("Foo", BlockMode.timer),
-                ("Bar", BlockMode.schedule),
-                ("Faz", BlockMode.limit),
-                ("Baz", BlockMode.opens),
+                ("Timer", BlockMode.timer),
+                ("Schedule", BlockMode.schedule),
+                ("Limit", BlockMode.limit),
+                ("Opens", BlockMode.opens),
             ]
             
             for (name, mode) in items {

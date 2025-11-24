@@ -93,12 +93,8 @@ extension Item {
     }
     
     @MainActor private func blockTimer() {
-        BlockController.shared.applyBlock(for: apps)
-        
-        Task {
-            try? await Task.sleep(for: .seconds(timerDuration.totalSeconds))
-            BlockController.shared.clearBlock()
-        }
+        scheduleWindow = .init(of: timerDuration)
+        blockSchedule()
     }
     
     @MainActor private func blockSchedule() {
@@ -138,6 +134,13 @@ struct Duration: Codable {
 struct ScheduleWindow: Codable {
     var start: Date = emptyDate
     var end: Date = emptyDate
+    
+    init() {}
+    
+    init(of duration: Duration) {
+        start = .now
+        end = start.addingTimeInterval(TimeInterval(duration.totalSeconds))
+    }
     
     private static var emptyDate: Date {
         Calendar.current.startOfDay(for: Date())
