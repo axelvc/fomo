@@ -24,18 +24,19 @@ struct EditItemView: View {
     var body: some View {
         VStack {
 
-            VStack {
-
-                Picker("Block mode", selection: $item.blockMode) {
-                    ForEach(BlockMode.allCases) { mode in
-                        Text(mode.title).tag(mode)
+            if isNew {
+                VStack {
+                    Picker("Block mode", selection: $item.blockMode) {
+                        ForEach(BlockMode.allCases) { mode in
+                            Text(mode.title).tag(mode)
+                        }
                     }
+                    .pickerStyle(.segmented)
+                    .controlSize(.large)
                 }
-                .pickerStyle(.segmented)
-                .controlSize(.large)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal)
             
 
             Form {
@@ -90,12 +91,10 @@ struct EditItemView: View {
     }
     
     func saveItem() {
-        if isNew {
-            modelContext.insert(item)
-            item.block()
-        }
-
+        item.block()
+        modelContext.insert(item)
         try? modelContext.save()
+        
         dismiss()
     }
 }
