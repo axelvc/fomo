@@ -77,7 +77,7 @@ struct ItemPreview: View {
                 DurationTimer()
             case .schedule:
                 let from = item.scheduleWindow.start.formatted(.dateTime.hour().minute())
-                let to = item.scheduleWindow.start.formatted(.dateTime.hour().minute())
+                let to = item.scheduleWindow.end.formatted(.dateTime.hour().minute())
                 
                 Capsule()
                     .fill(.gray.tertiary)
@@ -109,7 +109,7 @@ struct ItemPreview: View {
                 }
             case .opens:
                 let opens = item.opensConfig.opens
-                let breakTime = formattedDuration(item.opensConfig.allowedPerOpen)
+                let breakTime = item.opensConfig.allowedPerOpen
                 
                 HStack()  {
                     Capsule()
@@ -124,7 +124,7 @@ struct ItemPreview: View {
                         .fill(.gray.tertiary)
                         .frame(maxWidth: 50)
                         .overlay {
-                            Text(breakTime)
+                            Text("\(breakTime) min")
                                 .font(.caption)
                         }
                 }

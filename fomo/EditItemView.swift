@@ -91,10 +91,10 @@ struct EditItemView: View {
     }
     
     func saveItem() {
-        item.block()
         modelContext.insert(item)
         try? modelContext.save()
         
+        item.block()
         dismiss()
     }
 }
@@ -172,7 +172,12 @@ struct EditOpensView: View {
             }
             .pickerStyle(.menu)
             
-            EditTimerView(duration: $opensConfig.allowedPerOpen)
+            Picker("Duration:", selection: $opensConfig.allowedPerOpen) {
+                ForEach(0...60, id: \.self) { n in
+                    Text("\(n) min").tag(n)
+                }
+            }
+            .pickerStyle(.menu)
         }
     }
 }

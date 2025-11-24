@@ -70,13 +70,13 @@ extension Item {
         case .timer:
             timerDuration.totalSeconds > 0
         case .schedule:
-            scheduleWindow.start < scheduleWindow.end
+            scheduleWindow.start != scheduleWindow.end
         case .limit:
-            limitConfig.breakTime.totalSeconds > 0
-            && limitConfig.freeTime.totalSeconds > 0
+            limitConfig.freeTime.totalSeconds > 0
+            && limitConfig.breakTime.totalSeconds > 0
         case .opens:
             opensConfig.opens > 0
-            && opensConfig.allowedPerOpen.totalSeconds > 0
+            && opensConfig.allowedPerOpen > 0
         }
     }
 }
@@ -154,5 +154,5 @@ struct LimitConfig: Codable {
 
 struct OpensConfig: Codable {
     var opens: Int = 0
-    var allowedPerOpen: Duration = .init()
+    var allowedPerOpen: Int = 0
 }
