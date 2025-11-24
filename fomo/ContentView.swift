@@ -79,7 +79,13 @@ struct ItemPreview: View {
                 let from = item.scheduleWindow.start.formatted(.dateTime.hour().minute())
                 let to = item.scheduleWindow.start.formatted(.dateTime.hour().minute())
                 
-                Text("\(from) - \(to)")
+                Capsule()
+                    .fill(.gray.tertiary)
+                    .frame(maxWidth: 90)
+                    .overlay {
+                        Text("\(from) - \(to)")
+                            .font(.caption)
+                    }
             case .limit:
                 let freeTime = formattedDuration(item.limitConfig.freeTime)
                 let breakTime = formattedDuration(item.limitConfig.breakTime)
@@ -87,28 +93,41 @@ struct ItemPreview: View {
                 HStack()  {
                     Capsule()
                         .fill(.gray.tertiary)
-                        .frame(maxWidth: 100)
+                        .frame(maxWidth: 90)
                         .overlay {
-                            Text("\(freeTime) limit")
+                            Text("\(freeTime) Limit")
                                 .font(.caption)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
                         }
                     
                     Capsule()
                         .fill(.gray.tertiary)
-                        .frame(maxWidth: 100)
+                        .frame(maxWidth: 90)
                         .overlay {
-                            Text("\(breakTime) break")
+                            Text("\(breakTime) Break")
                                 .font(.caption)
                         }
                 }
-                
             case .opens:
                 let opens = item.opensConfig.opens
                 let breakTime = formattedDuration(item.opensConfig.allowedPerOpen)
                 
-                Text("\(opens) opens of \(breakTime) minutes each")
+                HStack()  {
+                    Capsule()
+                        .fill(.gray.tertiary)
+                        .frame(maxWidth: 70)
+                        .overlay {
+                            Text("\(opens) Opens")
+                                .font(.caption)
+                        }
+                    
+                    Capsule()
+                        .fill(.gray.tertiary)
+                        .frame(maxWidth: 50)
+                        .overlay {
+                            Text(breakTime)
+                                .font(.caption)
+                        }
+                }
             }
         }
     }
@@ -122,13 +141,13 @@ struct ItemPreview: View {
             let minutes = (remaining % 3600) / 60
             let seconds = remaining % 60
             
-            Text(String(format: "%02d:%02d:%02d", hours, minutes, seconds))
+            Text(String(format: "%01d:%02d:%02d", hours, minutes, seconds))
                 .monospacedDigit()
         }
     }
     
     private func formattedDuration(_ duration: Duration) -> String {
-        let hour = item.timerDuration.hours.description.padding(toLength: 2, withPad: "0", startingAt: 0)
+        let hour = item.timerDuration.hours.description
         let minute = item.timerDuration.minutes.description.padding(toLength: 2, withPad: "0", startingAt: 0)
 
         return "\(hour):\(minute)"
