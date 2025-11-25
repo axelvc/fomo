@@ -27,7 +27,7 @@ struct ContentView: View {
                             modelContext.delete(item)
                             try? modelContext.save()
                         }
-                        NavigationLink() {
+                        NavigationLink {
                             EditItemView(item: item)
                         } label: {
                             Label("Edit", systemImage: "pencil")
@@ -52,7 +52,7 @@ struct ContentView: View {
             Text("Select an item")
         }
     }
-    
+
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
@@ -66,19 +66,19 @@ struct ContentView: View {
 
 struct ItemPreview: View {
     @Bindable var item: Item
-    
+
     var body: some View {
         VStack(alignment: .leading) {
             Text(item.name).font(.largeTitle)
             Text(item.blockMode.title).font(.subheadline)
-            
+
             switch item.blockMode {
             case .timer:
                 DurationTimer()
             case .schedule:
                 let from = item.scheduleWindow.start.formatted(.dateTime.hour().minute())
                 let to = item.scheduleWindow.end.formatted(.dateTime.hour().minute())
-                
+
                 Capsule()
                     .fill(.gray.tertiary)
                     .frame(maxWidth: 90)
@@ -89,8 +89,8 @@ struct ItemPreview: View {
             case .limit:
                 let freeTime = formattedDuration(item.limitConfig.freeTime)
                 let breakTime = formattedDuration(item.limitConfig.breakTime)
-                
-                HStack()  {
+
+                HStack {
                     Capsule()
                         .fill(.gray.tertiary)
                         .frame(maxWidth: 90)
@@ -98,7 +98,7 @@ struct ItemPreview: View {
                             Text("\(freeTime) Limit")
                                 .font(.caption)
                         }
-                    
+
                     Capsule()
                         .fill(.gray.tertiary)
                         .frame(maxWidth: 90)
@@ -110,8 +110,8 @@ struct ItemPreview: View {
             case .opens:
                 let opens = item.opensConfig.opens
                 let breakTime = item.opensConfig.allowedPerOpen
-                
-                HStack()  {
+
+                HStack {
                     Capsule()
                         .fill(.gray.tertiary)
                         .frame(maxWidth: 70)
@@ -119,7 +119,7 @@ struct ItemPreview: View {
                             Text("\(opens) Opens")
                                 .font(.caption)
                         }
-                    
+
                     Capsule()
                         .fill(.gray.tertiary)
                         .frame(maxWidth: 50)
@@ -131,24 +131,25 @@ struct ItemPreview: View {
             }
         }
     }
-    
+
     @ViewBuilder
     private func DurationTimer() -> some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let remaining = max(0, Int(item.scheduleWindow.end.timeIntervalSince(context.date)))
-            
+
             let hours = remaining / 3600
             let minutes = (remaining % 3600) / 60
             let seconds = remaining % 60
-            
+
             Text(String(format: "%01d:%02d:%02d", hours, minutes, seconds))
                 .monospacedDigit()
         }
     }
-    
+
     private func formattedDuration(_ duration: Duration) -> String {
         let hour = item.timerDuration.hours.description
-        let minute = item.timerDuration.minutes.description.padding(toLength: 2, withPad: "0", startingAt: 0)
+        let minute = item.timerDuration.minutes.description.padding(
+            toLength: 2, withPad: "0", startingAt: 0)
 
         return "\(hour):\(minute)"
     }
@@ -156,22 +157,24 @@ struct ItemPreview: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true, onSetup: { result in
-            guard case .success(let store) = result else { return }
-            
-            let items: [(String, BlockMode)] = [
-                ("Timer", BlockMode.timer),
-                ("Schedule", BlockMode.schedule),
-                ("Limit", BlockMode.limit),
-                ("Opens", BlockMode.opens),
-            ]
-            
-            for (name, mode) in items {
-                let item = Item()
-                item.name = name
-                item.blockMode = mode
+        .modelContainer(
+            for: Item.self, inMemory: true,
+            onSetup: { result in
+                guard case .success(let store) = result else { return }
 
-                store.mainContext.insert(item)
-            }
-        })
+                let items: [(String, BlockMode)] = [
+                    ("Timer", BlockMode.timer),
+                    ("Schedule", BlockMode.schedule),
+                    ("Limit", BlockMode.limit),
+                    ("Opens", BlockMode.opens),
+                ]
+
+                for (name, mode) in items {
+                    let item = Item()
+                    item.name = name
+                    item.blockMode = mode
+
+                    store.mainContext.insert(item)
+                }
+            })
 }

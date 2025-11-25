@@ -13,7 +13,7 @@ import SwiftData
 final class Item {
     @Attribute(.unique)
     var id: UUID
-    
+
     var name: String
 
     var apps: Set<ApplicationToken>
@@ -46,7 +46,7 @@ final class Item {
         self.limitConfig = .init()
         self.opensConfig = .init()
     }
-    
+
     private func resetLimitMode() {
         switch blockMode {
         case .timer:
@@ -65,7 +65,7 @@ extension Item {
     var isValid: Bool {
         if name.isEmpty { return false }
         // if apps.isEmpty { return false }
-        
+
         return switch blockMode {
         case .timer:
             timerDuration.totalSeconds > 0
@@ -73,10 +73,10 @@ extension Item {
             scheduleWindow.start != scheduleWindow.end
         case .limit:
             limitConfig.freeTime.totalSeconds > 0
-            && limitConfig.breakTime.totalSeconds > 0
+                && limitConfig.breakTime.totalSeconds > 0
         case .opens:
             opensConfig.opens > 0
-            && opensConfig.allowedPerOpen > 0
+                && opensConfig.allowedPerOpen > 0
         }
     }
 }
@@ -89,22 +89,22 @@ extension Item {
         case .limit: blockLimit()
         case .opens: blockOpens()
         }
-        
+
     }
-    
+
     @MainActor private func blockTimer() {
         scheduleWindow = .init(of: timerDuration)
         blockSchedule()
     }
-    
+
     @MainActor private func blockSchedule() {
         try? BlockController.shared.startSchedule(for: self)
     }
-    
+
     @MainActor private func blockLimit() {
         BlockController.shared.startLimit(for: self)
     }
-    
+
     @MainActor private func blockOpens() {
         //
     }
@@ -127,21 +127,21 @@ enum BlockMode: String, Codable, CaseIterable, Identifiable {
 struct Duration: Codable {
     var hours: Int = 0
     var minutes: Int = 0
-    
+
     var totalSeconds: Int { hours * 3600 + minutes * 60 }
 }
 
 struct ScheduleWindow: Codable {
     var start: Date = emptyDate
     var end: Date = emptyDate
-    
+
     init() {}
-    
+
     init(of duration: Duration) {
         start = .now
         end = start.addingTimeInterval(TimeInterval(duration.totalSeconds))
     }
-    
+
     private static var emptyDate: Date {
         Calendar.current.startOfDay(for: Date())
     }
