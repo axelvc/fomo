@@ -76,7 +76,7 @@ struct ItemPreview: View {
             case .timer:
                 Capsule()
                     .fill(.gray.tertiary)
-                    .frame(width: 70, height: 20)
+                    .frame(width: 65, height: 20)
                     .overlay {
                         DurationTimer(to: item.scheduleWindow.end).font(.caption)
                     }
@@ -104,7 +104,7 @@ struct ItemPreview: View {
                 HStack {
                     Capsule()
                         .fill(.gray.tertiary)
-                        .frame(maxWidth: 90)
+                        .frame(width: 80, height: 20)
                         .overlay {
                             Text("\(freeTime) Limit")
                                 .font(.caption)
@@ -112,7 +112,7 @@ struct ItemPreview: View {
 
                     Capsule()
                         .fill(.gray.tertiary)
-                        .frame(maxWidth: 90)
+                        .frame(width: 80, height: 20)
                         .overlay {
                             Text("\(breakTime) Break")
                                 .font(.caption)
@@ -125,7 +125,7 @@ struct ItemPreview: View {
                 HStack {
                     Capsule()
                         .fill(.gray.tertiary)
-                        .frame(maxWidth: 70)
+                        .frame(width: 70, height: 20)
                         .overlay {
                             Text("\(opens) Opens")
                                 .font(.caption)
@@ -133,7 +133,7 @@ struct ItemPreview: View {
 
                     Capsule()
                         .fill(.gray.tertiary)
-                        .frame(maxWidth: 50)
+                        .frame(width: 50, height: 20)
                         .overlay {
                             Text("\(breakTime) min")
                                 .font(.caption)

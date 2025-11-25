@@ -37,12 +37,11 @@ struct EditItemView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal)
             }
-            
 
             Form {
                 Section {
                     TextField("Name", text: $item.name)
-                    
+
                     Button("Blocked apps") {
                         showAppPicker.toggle()
                     }
@@ -89,11 +88,11 @@ struct EditItemView: View {
         }
         .navigationTitle(isNew ? "New item" : "Edit item")
     }
-    
+
     func saveItem() {
         modelContext.insert(item)
         try? modelContext.save()
-        
+
         item.block()
         dismiss()
     }
@@ -102,7 +101,7 @@ struct EditItemView: View {
 struct EditTimerView: View {
     @Binding var duration: Duration
     var label: String = "Time:"
-    
+
     @State private var popupOn = false
 
     var body: some View {
@@ -121,9 +120,9 @@ struct EditTimerView: View {
                         }
                     }
                     .pickerStyle(.wheel)
-                    
+
                     Text(":")
-                    
+
                     Picker("Minute", selection: $duration.minutes) {
                         ForEach(0..<60) { n in
                             Text(n.description)
@@ -143,7 +142,8 @@ struct EditScheduleView: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            DatePicker("From:", selection: $scheduleWindow.start, displayedComponents: .hourAndMinute)
+            DatePicker(
+                "From:", selection: $scheduleWindow.start, displayedComponents: .hourAndMinute)
             DatePicker("To:", selection: $scheduleWindow.end, displayedComponents: .hourAndMinute)
         }
     }
@@ -171,7 +171,7 @@ struct EditOpensView: View {
                 }
             }
             .pickerStyle(.menu)
-            
+
             Picker("Duration:", selection: $opensConfig.allowedPerOpen) {
                 ForEach(0...60, id: \.self) { n in
                     Text("\(n) min").tag(n)
@@ -184,7 +184,7 @@ struct EditOpensView: View {
 
 #Preview {
     let item = Item()
-    
+
     NavigationStack {
         EditItemView(item: item)
     }
