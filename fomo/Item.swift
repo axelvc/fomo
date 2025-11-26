@@ -59,7 +59,10 @@ final class Item {
 
     var isValid: Bool {
         if name.isEmpty { return false }
-        // if apps.isEmpty { return false }
+
+        #if !targetEnvironment(simulator)
+            if apps.isEmpty { return false }
+        #endif
 
         return switch blockMode {
         case .timer:
