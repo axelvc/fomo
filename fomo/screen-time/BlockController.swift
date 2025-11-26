@@ -26,6 +26,8 @@ extension DeviceActivityName {
     }
 }
 
+nonisolated let limitReachedEvent = DeviceActivityEvent.Name("limitReached")
+
 struct LimitStorage: Codable {
     let tokens: [ApplicationToken]
     let freeSeconds: Int
@@ -139,7 +141,6 @@ final class BlockController {
         )
 
         let thresholdComponents = DateComponents(second: storage.freeSeconds)
-        let limitEventName = DeviceActivityEvent.Name("limitReached")
         let limitEvent = DeviceActivityEvent(
             applications: Set(storage.tokens),
             threshold: thresholdComponents
@@ -149,7 +150,7 @@ final class BlockController {
             try center.startMonitoring(
                 activity,
                 during: schedule,
-                events: [limitEventName: limitEvent]
+                events: [limitReachedEvent: limitEvent]
             )
         } catch {
             print("Failed to start limit monitoring:", error)

@@ -50,7 +50,7 @@ nonisolated class ActivityMonitor: DeviceActivityMonitor {
     ) {
         super.eventDidReachThreshold(event, activity: activity)
 
-        guard event.rawValue == "limitReached" else { return }
+        guard event == limitReachedEvent else { return }
 
         Task { @MainActor in
             let rawKey = activity.rawValue
