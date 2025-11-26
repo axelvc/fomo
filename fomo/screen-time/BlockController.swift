@@ -34,6 +34,13 @@ struct LimitStorage: Codable {
     let breakSeconds: Int
 }
 
+struct OpensStorage: Codable {
+    let tokens: [ApplicationToken]
+    let allowedPerOpen: Int
+    var opensLimit: Int
+    let openLeft: Int
+}
+
 @MainActor
 final class BlockController {
     static let shared = BlockController()
@@ -62,8 +69,7 @@ final class BlockController {
         case .limit:
             startLimit(for: item)
         case .opens:
-            // TODO
-            break
+            startOpens(for: item)
         }
     }
 
@@ -129,7 +135,9 @@ final class BlockController {
     }
 
     func repeatLimit(
-        activity: DeviceActivityName, storage: LimitStorage, center: DeviceActivityCenter
+        activity: DeviceActivityName,
+        storage: LimitStorage,
+        center: DeviceActivityCenter
     ) {
         let startComponents = DateComponents(hour: 0, minute: 0)
         let endComponents = DateComponents(hour: 23, minute: 59)
@@ -154,6 +162,52 @@ final class BlockController {
             )
         } catch {
             print("Failed to start limit monitoring:", error)
+        }
+    }
+
+    func startOpens(for item: Item) {
+        let center = DeviceActivityCenter()
+        let activityName = DeviceActivityName(for: item)
+
+        let allowedPerOpen = item.opensConfig.allowedPerOpen
+        let opensLimit = item.opensConfig.opens
+        let tokens = Array(item.apps)
+
+        let opensStorage = OpensStorage(
+            tokens: tokens,
+            allowedPerOpen: allowedPerOpen,
+            opensLimit: opensLimit,
+            openLeft: opensLimit
+        )
+        if let data = try? JSONEncoder().encode(opensStorage) {
+            SharedDefaults.shared.set(data, forKey: activityName.rawValue)
+        }
+
+        self.applyBlock(for: item.apps)
+
+        let startComponents = DateComponents(hour: 0, minute: 0)
+        let endComponents = DateComponents(hour: 23, minute: 59)
+
+        let schedule = DeviceActivitySchedule(
+            intervalStart: startComponents,
+            intervalEnd: endComponents,
+            repeats: true
+        )
+
+        let thresholdComponents = DateComponents(second: allowedPerOpen)
+        let opensEvent = DeviceActivityEvent(
+            applications: Set(tokens),
+            threshold: thresholdComponents
+        )
+
+        do {
+            try center.startMonitoring(
+                activityName,
+                during: schedule,
+                events: [limitReachedEvent: opensEvent]
+            )
+        } catch {
+            print("Failed to start opens monitoring:", error)
         }
     }
 }
