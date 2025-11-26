@@ -56,7 +56,10 @@ struct ContentView: View {
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
-                modelContext.delete(items[index])
+                let item = items[index]
+
+                BlockController.shared.stopMonitoring(for: item)
+                modelContext.delete(item)
             }
 
             try! modelContext.save()

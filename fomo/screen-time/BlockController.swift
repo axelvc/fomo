@@ -50,6 +50,13 @@ final class BlockController {
         store.clearAllSettings()
     }
 
+    func stopMonitoring(for item: Item) {
+        let center = DeviceActivityCenter()
+        let activityName = DeviceActivityName(for: item)
+
+        center.stopMonitoring([activityName])
+    }
+
     func startSchedule(for item: Item) throws {
         let center = DeviceActivityCenter()
         let activityName = DeviceActivityName(for: item)

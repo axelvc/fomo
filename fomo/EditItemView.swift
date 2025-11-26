@@ -90,6 +90,10 @@ struct EditItemView: View {
     }
 
     func saveItem() {
+        if !isNew {
+            BlockController.shared.stopMonitoring(for: item)
+        }
+
         modelContext.insert(item)
         try? modelContext.save()
 
