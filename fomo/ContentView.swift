@@ -98,7 +98,8 @@ struct ItemPreview: View {
                     .fill(.gray.tertiary)
                     .frame(width: 135, height: 20)
                     .overlay {
-                        CalendarTimer().font(.caption)
+                        CalendarTimer(start: item.scheduleWindow.start, end: item.scheduleWindow.end)
+                            .font(.caption)
                     }
             case .limit:
                 let freeTime = formattedDuration(item.limitConfig.freeTime)
@@ -146,20 +147,31 @@ struct ItemPreview: View {
         }
     }
 
-    @ViewBuilder
-    private func DurationTimer(to: Date) -> some View {
+    private func formattedDuration(_ duration: Duration) -> String {
+        let hour = item.timerDuration.hours.description
+        let minute = item.timerDuration.minutes.description.padding(toLength: 2, withPad: "0", startingAt: 0)
+
+        return "\(hour):\(minute)"
+    }
+}
+
+struct DurationTimer: View {
+    var to: Date
+
+    var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let remaining = max(0, to.timeIntervalSince(context.date))
 
             Text(intervalToHMS(interval: remaining)).monospacedDigit()
         }
     }
+}
 
-    @ViewBuilder
-    private func CalendarTimer() -> some View {
-        let start = item.scheduleWindow.start
-        let end = item.scheduleWindow.end
+struct CalendarTimer: View {
+    var start: Date
+    var end: Date
 
+    var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let isRunning = start < context.date && context.date < end
             let interval = max(0, (isRunning ? end : start).timeIntervalSince(context.date))
@@ -170,23 +182,15 @@ struct ItemPreview: View {
             }
         }
     }
+}
 
-    private func intervalToHMS(interval: TimeInterval) -> String {
-        let total = Int(interval)
-        let hours = total / 3600
-        let minutes = (total % 3600) / 60
-        let seconds = total % 60
+private func intervalToHMS(interval: TimeInterval) -> String {
+    let total = Int(interval)
+    let hours = total / 3600
+    let minutes = (total % 3600) / 60
+    let seconds = total % 60
 
-        return String(format: "%01d:%02d:%02d", hours, minutes, seconds)
-    }
-
-    private func formattedDuration(_ duration: Duration) -> String {
-        let hour = item.timerDuration.hours.description
-        let minute = item.timerDuration.minutes.description.padding(
-            toLength: 2, withPad: "0", startingAt: 0)
-
-        return "\(hour):\(minute)"
-    }
+    return String(format: "%01d:%02d:%02d", hours, minutes, seconds)
 }
 
 #Preview {
