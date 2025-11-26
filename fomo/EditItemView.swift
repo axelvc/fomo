@@ -97,7 +97,7 @@ struct EditItemView: View {
         modelContext.insert(item)
         try? modelContext.save()
 
-        item.block()
+        BlockController.shared.startMonitoring(for: item)
         dismiss()
     }
 }

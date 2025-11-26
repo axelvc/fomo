@@ -13,10 +13,14 @@ import SwiftData
 final class Item {
     @Attribute(.unique)
     var id: UUID
-
     var name: String
-
     var apps: Set<ApplicationToken>
+    var breakMode: BreakMode
+
+    var timerDuration: Duration
+    var scheduleWindow: ScheduleWindow
+    var limitConfig: LimitConfig
+    var opensConfig: OpensConfig
 
     var _blockMode: BlockMode
     @Transient var blockMode: BlockMode {
@@ -27,13 +31,6 @@ final class Item {
             resetLimitMode()
         }
     }
-
-    var timerDuration: Duration
-    var scheduleWindow: ScheduleWindow
-    var limitConfig: LimitConfig
-    var opensConfig: OpensConfig
-
-    var breakMode: BreakMode
 
     init() {
         self.id = UUID()
@@ -59,9 +56,7 @@ final class Item {
             opensConfig = .init()
         }
     }
-}
 
-extension Item {
     var isValid: Bool {
         if name.isEmpty { return false }
         // if apps.isEmpty { return false }
@@ -78,35 +73,6 @@ extension Item {
             opensConfig.opens > 0
                 && opensConfig.allowedPerOpen > 0
         }
-    }
-}
-
-extension Item {
-    @MainActor func block() {
-        switch blockMode {
-        case .timer: blockTimer()
-        case .schedule: blockSchedule()
-        case .limit: blockLimit()
-        case .opens: blockOpens()
-        }
-
-    }
-
-    @MainActor private func blockTimer() {
-        scheduleWindow = .init(of: timerDuration)
-        blockSchedule()
-    }
-
-    @MainActor private func blockSchedule() {
-        try? BlockController.shared.startSchedule(for: self)
-    }
-
-    @MainActor private func blockLimit() {
-        BlockController.shared.startLimit(for: self)
-    }
-
-    @MainActor private func blockOpens() {
-        //
     }
 }
 

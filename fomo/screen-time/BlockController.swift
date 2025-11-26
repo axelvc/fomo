@@ -5,8 +5,8 @@
 //  Created by Axel on 19/11/25.
 //
 
-import Foundation
 import DeviceActivity
+import Foundation
 import ManagedSettings
 
 enum SharedDefaults {
@@ -18,7 +18,7 @@ extension DeviceActivityName {
     init(for item: Item) {
         self.init("fomo.\(item.blockMode).\(item.id.uuidString)")
     }
-    
+
     var blockModeFromName: BlockMode? {
         let parts = rawValue.split(separator: ".")
         guard parts.count >= 3 else { return nil }
@@ -48,6 +48,21 @@ final class BlockController {
 
     func clearBlock() {
         store.clearAllSettings()
+    }
+
+    func startMonitoring(for item: Item) {
+        switch item.blockMode {
+        case .timer:
+            item.scheduleWindow = .init(of: item.timerDuration)
+            try? startSchedule(for: item)
+        case .schedule:
+            try? startSchedule(for: item)
+        case .limit:
+            startLimit(for: item)
+        case .opens:
+            // TODO
+            break
+        }
     }
 
     func stopMonitoring(for item: Item) {
@@ -103,15 +118,17 @@ final class BlockController {
         if let data = try? JSONEncoder().encode(storage) {
             SharedDefaults.shared.set(data, forKey: activityName.rawValue)
         }
-        
+
         self.repeatLimit(
             activity: activityName,
             storage: storage,
             center: center
         )
     }
- 
-    func repeatLimit(activity: DeviceActivityName, storage: LimitStorage, center: DeviceActivityCenter) {
+
+    func repeatLimit(
+        activity: DeviceActivityName, storage: LimitStorage, center: DeviceActivityCenter
+    ) {
         let startComponents = DateComponents(hour: 0, minute: 0)
         let endComponents = DateComponents(hour: 23, minute: 59)
 
