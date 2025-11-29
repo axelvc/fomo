@@ -10,7 +10,7 @@ import ManagedSettings
 import SwiftData
 
 @Model
-final class Item {
+final class Item: ItemProtocol {
     @Attribute(.unique)
     var id: UUID
     var name: String
@@ -101,12 +101,10 @@ struct Duration: Codable {
 }
 
 struct ScheduleWindow: Codable {
-    var start: Date = emptyDate
-    var end: Date = emptyDate
+    var start: Date
+    var end: Date
 
-    init() {}
-
-    init(start: Date, end: Date) {
+    init(start: Date = emptyDate, end: Date = emptyDate) {
         self.start = start
         self.end = end
     }
@@ -128,5 +126,36 @@ struct LimitConfig: Codable {
 
 struct OpensConfig: Codable {
     var opens: Int = 0
+    var openLeft = 0
     var allowedPerOpen: Int = 0
+}
+
+struct ItemConfig: Codable, ItemProtocol {
+    let id: UUID
+    let blockMode: BlockMode
+    let apps: Set<ApplicationToken>
+    let timerDuration: Duration
+    let scheduleWindow: ScheduleWindow
+    let limitConfig: LimitConfig
+    let opensConfig: OpensConfig
+
+    init(from item: Item) {
+        self.id = item.id
+        self.blockMode = item.blockMode
+        self.apps = item.apps
+        self.timerDuration = item.timerDuration
+        self.scheduleWindow = item.scheduleWindow
+        self.limitConfig = item.limitConfig
+        self.opensConfig = item.opensConfig
+    }
+}
+
+protocol ItemProtocol {
+    var id: UUID { get }
+    var apps: Set<ApplicationToken> { get }
+}
+
+enum SharedDefaults {
+    static let suiteName = "group.axelvc.fomo"
+    static var shared: UserDefaults { .init(suiteName: suiteName)! }
 }

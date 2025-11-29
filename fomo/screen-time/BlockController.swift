@@ -9,67 +9,55 @@ import DeviceActivity
 import Foundation
 import ManagedSettings
 
-enum SharedDefaults {
-    static let suiteName = "group.axelvc.fomo"
-    static var shared: UserDefaults { .init(suiteName: suiteName)! }
-}
-
 extension DeviceActivityName {
-    init(for item: Item) {
-        self.init("fomo.\(item.blockMode).\(item.id.uuidString)")
-    }
-
-    var blockModeFromName: BlockMode? {
-        let parts = rawValue.split(separator: ".")
-        guard parts.count >= 3 else { return nil }
-        return BlockMode(rawValue: String(parts[1]))
+    init(for item: ItemProtocol) {
+        self.init("fomo.\(item.id.uuidString)")
     }
 }
 
 nonisolated let limitReachedEvent = DeviceActivityEvent.Name("limitReached")
 
-struct LimitStorage: Codable {
-    let tokens: [ApplicationToken]
-    let freeSeconds: Int
-    let breakSeconds: Int
-}
-
-struct OpensStorage: Codable {
-    let tokens: [ApplicationToken]
-    let allowedPerOpen: Int
-    var opensLimit: Int
-    let openLeft: Int
-}
-
 @MainActor
 final class BlockController {
     static let shared = BlockController()
-    private let store = ManagedSettingsStore()
 
-    func applyBlock(for tokens: Set<ApplicationToken>) {
-        let apps = Set(tokens.map(Application.init))
-        self.applyBlock(for: apps)
+    private func store(for item: ItemProtocol) -> ManagedSettingsStore {
+        ManagedSettingsStore(named: ManagedSettingsStore.Name(item.id.uuidString))
     }
 
-    func applyBlock(for apps: Set<Application>) {
-        store.application.blockedApplications = apps.isEmpty ? nil : .init(apps)
-    }
+    private func saveItem(_ item: Item) {
+        let activityName = DeviceActivityName(for: item)
+        let config = ItemConfig(from: item)
 
-    func clearBlock() {
-        store.clearAllSettings()
+        if let data = try? JSONEncoder().encode(config) {
+            SharedDefaults.shared.set(data, forKey: activityName.rawValue)
+        }
     }
 
     func startMonitoring(for item: Item) {
+        saveItem(item)
+
         switch item.blockMode {
         case .timer:
-            item.scheduleWindow = .init(of: item.timerDuration)
-            try? startSchedule(for: item)
+            // Block immediately for duration
+            try? createScheduled(
+                for: item,
+                start: .now,
+                end: .now.addingTimeInterval(TimeInterval(item.timerDuration.totalSeconds))
+            )
         case .schedule:
-            try? startSchedule(for: item)
+            // Block during window
+            try? createScheduled(
+                for: item,
+                start: item.scheduleWindow.start,
+                end: item.scheduleWindow.end
+            )
         case .limit:
-            startLimit(for: item)
+            // Monitor usage, block when limit reached
+            createThreshold(for: item, threshold: item.limitConfig.freeTime.totalSeconds)
         case .opens:
-            startOpens(for: item)
+            // Block immediately (forever/until used)
+            applyShield(for: item)
         }
     }
 
@@ -78,30 +66,51 @@ final class BlockController {
         let activityName = DeviceActivityName(for: item)
 
         center.stopMonitoring([activityName])
+
+        // Clear shield
+        let store = store(for: item)
+        store.clearAllSettings()
+
+        // Clean up defaults
+        SharedDefaults.shared.removeObject(forKey: activityName.rawValue)
     }
 
-    func startSchedule(for item: Item) throws {
+    func useOpen(for item: Item) {
+        guard item.blockMode == .opens, item.opensConfig.openLeft > 0 else { return }
+
+        item.opensConfig.openLeft -= 1
+        saveItem(item)
+        clearShield(for: item)
+        createThreshold(for: item, threshold: item.opensConfig.allowedPerOpen * 60)
+    }
+
+    func applyShield(for item: ItemProtocol) {
+        let store = store(for: item)
+        store.shield.applications = item.apps
+    }
+
+    func clearShield(for item: ItemProtocol) {
+        let store = store(for: item)
+        store.clearAllSettings()
+    }
+
+    func createScheduled(for item: ItemProtocol, start: Date, end: Date) throws {
         let center = DeviceActivityCenter()
         let activityName = DeviceActivityName(for: item)
 
-        let tokensArray = Array(item.apps)
-        if let data = try? JSONEncoder().encode(tokensArray) {
-            SharedDefaults.shared.set(data, forKey: activityName.rawValue)
-        }
-
         let startComponents = Calendar.current.dateComponents(
             [.hour, .minute],
-            from: item.scheduleWindow.start
+            from: start
         )
         let endComponents = Calendar.current.dateComponents(
             [.hour, .minute],
-            from: item.scheduleWindow.end
+            from: end
         )
 
         let schedule = DeviceActivitySchedule(
             intervalStart: startComponents,
             intervalEnd: endComponents,
-            repeats: false
+            repeats: true
         )
 
         try center.startMonitoring(
@@ -110,35 +119,10 @@ final class BlockController {
         )
     }
 
-    func startLimit(for item: Item) {
+    func createThreshold(for item: ItemProtocol, threshold: Int) {
         let center = DeviceActivityCenter()
         let activityName = DeviceActivityName(for: item)
 
-        let freeSeconds = item.limitConfig.freeTime.totalSeconds
-        let breakSeconds = item.limitConfig.breakTime.totalSeconds
-
-        let storage = LimitStorage(
-            tokens: Array(item.apps),
-            freeSeconds: freeSeconds,
-            breakSeconds: breakSeconds
-        )
-
-        if let data = try? JSONEncoder().encode(storage) {
-            SharedDefaults.shared.set(data, forKey: activityName.rawValue)
-        }
-
-        self.repeatLimit(
-            activity: activityName,
-            storage: storage,
-            center: center
-        )
-    }
-
-    func repeatLimit(
-        activity: DeviceActivityName,
-        storage: LimitStorage,
-        center: DeviceActivityCenter
-    ) {
         let startComponents = DateComponents(hour: 0, minute: 0)
         let endComponents = DateComponents(hour: 23, minute: 59)
 
@@ -148,55 +132,9 @@ final class BlockController {
             repeats: true
         )
 
-        let thresholdComponents = DateComponents(second: storage.freeSeconds)
+        let thresholdComponents = DateComponents(second: threshold)
         let limitEvent = DeviceActivityEvent(
-            applications: Set(storage.tokens),
-            threshold: thresholdComponents
-        )
-
-        do {
-            try center.startMonitoring(
-                activity,
-                during: schedule,
-                events: [limitReachedEvent: limitEvent]
-            )
-        } catch {
-            print("Failed to start limit monitoring:", error)
-        }
-    }
-
-    func startOpens(for item: Item) {
-        let center = DeviceActivityCenter()
-        let activityName = DeviceActivityName(for: item)
-
-        let allowedPerOpen = item.opensConfig.allowedPerOpen
-        let opensLimit = item.opensConfig.opens
-        let tokens = Array(item.apps)
-
-        let opensStorage = OpensStorage(
-            tokens: tokens,
-            allowedPerOpen: allowedPerOpen,
-            opensLimit: opensLimit,
-            openLeft: opensLimit
-        )
-        if let data = try? JSONEncoder().encode(opensStorage) {
-            SharedDefaults.shared.set(data, forKey: activityName.rawValue)
-        }
-
-        self.applyBlock(for: item.apps)
-
-        let startComponents = DateComponents(hour: 0, minute: 0)
-        let endComponents = DateComponents(hour: 23, minute: 59)
-
-        let schedule = DeviceActivitySchedule(
-            intervalStart: startComponents,
-            intervalEnd: endComponents,
-            repeats: true
-        )
-
-        let thresholdComponents = DateComponents(second: allowedPerOpen)
-        let opensEvent = DeviceActivityEvent(
-            applications: Set(tokens),
+            applications: item.apps,
             threshold: thresholdComponents
         )
 
@@ -204,10 +142,10 @@ final class BlockController {
             try center.startMonitoring(
                 activityName,
                 during: schedule,
-                events: [limitReachedEvent: opensEvent]
+                events: [limitReachedEvent: limitEvent]
             )
         } catch {
-            print("Failed to start opens monitoring:", error)
+            print("Failed to start limit monitoring:", error)
         }
     }
 }

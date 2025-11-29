@@ -14,21 +14,7 @@ nonisolated class ActivityMonitor: DeviceActivityMonitor {
         super.intervalDidStart(for: activity)
 
         Task { @MainActor in
-            let rawKey = activity.rawValue
-
-            guard activity.blockModeFromName == .schedule else { return }
-
-            guard
-                let data = SharedDefaults.shared.data(forKey: rawKey),
-                let tokens = try? JSONDecoder().decode(
-                    [ApplicationToken].self,
-                    from: data
-                )
-            else {
-                return
-            }
-
-            BlockController.shared.applyBlock(for: Set(tokens))
+            handleScheduledStart(activity: activity)
         }
     }
 
@@ -36,10 +22,7 @@ nonisolated class ActivityMonitor: DeviceActivityMonitor {
         super.intervalDidEnd(for: activity)
 
         Task { @MainActor in
-            guard activity.blockModeFromName == .schedule else { return }
-
-            BlockController.shared.clearBlock()
-            SharedDefaults.shared.removeObject(forKey: activity.rawValue)
+            handleScheduledEnd(activity: activity)
         }
     }
 
@@ -52,87 +35,52 @@ nonisolated class ActivityMonitor: DeviceActivityMonitor {
         guard event == limitReachedEvent else { return }
 
         Task { @MainActor in
-            let rawKey = activity.rawValue
+            guard let config = retrieveConfig(for: activity) else { return }
 
-            guard
-                let data = SharedDefaults.shared.data(forKey: rawKey)
-            else { return }
-
-            if let limitStorage = try? JSONDecoder().decode(
-                LimitStorage.self,
-                from: data
-            ) {
-                await handleLimitStorage(
-                    storage: limitStorage,
-                    activity: activity
-                )
-                return
-            }
-
-            if let opensStorage = try? JSONDecoder().decode(
-                OpensStorage.self,
-                from: data
-            ) {
-                handleOpensStorage(
-                    storage: opensStorage,
-                    activity: activity
-                )
+            switch config.blockMode {
+            case .limit:
+                handleLimitBlock(activity: activity, config: config)
+            case .opens:
+                handleOpensBlock(activity: activity, config: config)
+            default:
+                break
             }
         }
     }
 }
 
-private extension ActivityMonitor {
-    @MainActor
-    func handleLimitStorage(
-        storage: LimitStorage,
-        activity: DeviceActivityName
-    ) async {
-        let center = DeviceActivityCenter()
+extension ActivityMonitor {
+    func retrieveConfig(for activity: DeviceActivityName) -> ItemConfig? {
+        guard let data = SharedDefaults.shared.data(forKey: activity.rawValue) else { return nil }
+        return try? JSONDecoder().decode(ItemConfig.self, from: data)
+    }
 
-        center.stopMonitoring([activity])
+    func handleScheduledStart(activity: DeviceActivityName) {
+        guard let config = retrieveConfig(for: activity) else { return }
+        BlockController.shared.applyShield(for: config)
+    }
 
-        let tokens = Set(storage.tokens)
-        BlockController.shared.applyBlock(for: tokens)
+    func handleScheduledEnd(activity: DeviceActivityName) {
+        guard let config = retrieveConfig(for: activity) else { return }
+        BlockController.shared.clearShield(for: config)
 
-        try? await Task.sleep(for: .seconds(storage.breakSeconds))
+        if config.blockMode == .limit {
+            BlockController.shared.createThreshold(
+                for: config,
+                threshold: config.limitConfig.freeTime.totalSeconds
+            )
+        }
+    }
 
-        BlockController.shared.clearBlock()
-        BlockController.shared.repeatLimit(
-            activity: activity,
-            storage: storage,
-            center: center
+    func handleLimitBlock(activity: DeviceActivityName, config: ItemConfig) {
+        try? BlockController.shared.createScheduled(
+            for: config,
+            start: .now,
+            end: .now.addingTimeInterval(TimeInterval(config.limitConfig.breakTime.totalSeconds))
         )
     }
 
-    @MainActor
-    func handleOpensStorage(
-        storage: OpensStorage,
-        activity: DeviceActivityName
-    ) {
-        let remainingOpens = max(storage.openLeft - 1, 0)
-
-        let updatedStorage = OpensStorage(
-            tokens: storage.tokens,
-            allowedPerOpen: storage.allowedPerOpen,
-            opensLimit: storage.opensLimit,
-            openLeft: remainingOpens
-        )
-
-        if let encoded = try? JSONEncoder().encode(updatedStorage) {
-            SharedDefaults.shared.set(
-                encoded,
-                forKey: activity.rawValue
-            )
-        }
-
-        guard remainingOpens == 0 else { return }
-
-        let center = DeviceActivityCenter()
-        center.stopMonitoring([activity])
-
-        let tokens = Set(storage.tokens)
-        BlockController.shared.applyBlock(for: tokens)
-        SharedDefaults.shared.removeObject(forKey: activity.rawValue)
+    func handleOpensBlock(activity: DeviceActivityName, config: ItemConfig) {
+        BlockController.shared.applyShield(for: config)
     }
 }
