@@ -106,6 +106,11 @@ struct ScheduleWindow: Codable {
 
     init() {}
 
+    init(start: Date, end: Date) {
+        self.start = start
+        self.end = end
+    }
+
     init(of duration: Duration) {
         start = .now
         end = start.addingTimeInterval(TimeInterval(duration.totalSeconds))

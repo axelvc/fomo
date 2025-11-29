@@ -1,5 +1,5 @@
 //
-//  EditItemView.swift
+//  EditItem.swift
 //  fomo
 //
 //  Created by Axel on 23/11/25.
@@ -349,8 +349,8 @@ struct OpensPicker: View {
                     )
                     .overlay(
                         Rectangle()
-                            .fill(.tertiary.opacity(0.1))
-                            .cornerRadius(8)
+                            .fill(.background.secondary)
+                            .cornerRadius(.infinity)
                             .frame(width: 30, height: 80)
                             .offset(y: 5)
                     )
@@ -405,8 +405,5 @@ struct CustomButton<Content: View>: View {
 
     NavigationStack {
         EditItemView(item: item)
-    }
-    .onAppear {
-        item.blockMode = .opens
     }
 }
