@@ -5,8 +5,8 @@
 //  Created by Axel on 19/11/25.
 //
 
-import Foundation
 import FamilyControls
+import Foundation
 
 @MainActor
 @Observable
@@ -28,5 +28,13 @@ final class ScreenTimeAuthorization {
 
     func refresh() {
         status = center.authorizationStatus
+    }
+
+    func checkAuthorization() async {
+        status = center.authorizationStatus
+        if status == .notDetermined {
+            // Optionally request automatically, or wait for user action
+            // For now, we rely on user action in the view
+        }
     }
 }

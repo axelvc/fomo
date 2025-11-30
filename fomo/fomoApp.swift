@@ -5,14 +5,15 @@
 //  Created by Axel on 17/11/25.
 //
 
-import SwiftUI
+import FamilyControls
 import SwiftData
+import SwiftUI
 
 @main
 struct fomoApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            Item.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -23,10 +24,22 @@ struct fomoApp: App {
         }
     }()
 
+    @State private var auth = ScreenTimeAuthorization()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            if auth.status == .approved {
+                ContentView()
+            } else {
+                AuthorizationView(model: auth)
+                    .onAppear {
+                        auth.refresh()
+                    }
+            }
         }
         .modelContainer(sharedModelContainer)
+        .onChange(of: ScenePhase.active) { _, _ in
+            auth.refresh()
+        }
     }
 }
