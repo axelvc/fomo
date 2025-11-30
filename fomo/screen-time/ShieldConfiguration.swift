@@ -36,16 +36,16 @@ nonisolated final class CustomShieldConfiguration: ShieldConfigurationDataSource
         shielding application: ManagedSettings.Application
     ) -> ShieldConfiguration {
         MainActor.assumeIsolated {
-            let isOpensBlock: Bool = {
+            let allowDefer: Bool = {
                 guard let token = application.token,
                     let config = retrieveConfig(for: token)
                 else { return false }
 
-                return config.blockMode == .opens
+                return config.blockMode == .opens || config.breakMode == .relaxed
             }()
 
             let secondaryLabel: ShieldConfiguration.Label? =
-                isOpensBlock
+                allowDefer
                 ? .init(text: "Use app", color: .tertiaryLabel)
                 : nil
 

@@ -107,6 +107,7 @@ struct OpensConfig: Codable {
 struct ItemConfig: ItemProtocol, Codable {
     let id: UUID
     var blockMode: BlockMode
+    var breakMode: BreakMode
     var activitySelection: FamilyActivitySelection
     var timerDuration: TimeInterval
     var scheduleWindow: DateInterval
@@ -116,6 +117,7 @@ struct ItemConfig: ItemProtocol, Codable {
     init(from item: ItemProtocol) {
         self.id = item.id
         self.blockMode = item.blockMode
+        self.breakMode = item.breakMode
         self.activitySelection = item.activitySelection
         self.timerDuration = item.timerDuration
         self.scheduleWindow = item.scheduleWindow
@@ -127,6 +129,7 @@ struct ItemConfig: ItemProtocol, Codable {
 protocol ItemProtocol {
     var id: UUID { get }
     var blockMode: BlockMode { get }
+    var breakMode: BreakMode { get }
     var activitySelection: FamilyActivitySelection { get }
     var timerDuration: TimeInterval { get }
     var scheduleWindow: DateInterval { get }
