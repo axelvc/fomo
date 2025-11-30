@@ -132,14 +132,14 @@ struct OpensConfig: Codable {
 
 struct ItemConfig: Codable, ItemProtocol {
     let id: UUID
-    let blockMode: BlockMode
-    let apps: Set<ApplicationToken>
-    let timerDuration: Duration
-    let scheduleWindow: ScheduleWindow
-    let limitConfig: LimitConfig
-    let opensConfig: OpensConfig
+    var blockMode: BlockMode
+    var apps: Set<ApplicationToken>
+    var timerDuration: Duration
+    var scheduleWindow: ScheduleWindow
+    var limitConfig: LimitConfig
+    var opensConfig: OpensConfig
 
-    init(from item: Item) {
+    init(from item: ItemProtocol) {
         self.id = item.id
         self.blockMode = item.blockMode
         self.apps = item.apps
@@ -152,7 +152,12 @@ struct ItemConfig: Codable, ItemProtocol {
 
 protocol ItemProtocol {
     var id: UUID { get }
+    var blockMode: BlockMode { get }
     var apps: Set<ApplicationToken> { get }
+    var timerDuration: Duration { get }
+    var scheduleWindow: ScheduleWindow { get }
+    var limitConfig: LimitConfig { get }
+    var opensConfig: OpensConfig { get set }
 }
 
 enum SharedDefaults {

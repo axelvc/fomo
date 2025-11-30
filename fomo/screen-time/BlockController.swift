@@ -25,7 +25,7 @@ final class BlockController {
         ManagedSettingsStore(named: ManagedSettingsStore.Name(item.id.uuidString))
     }
 
-    private func saveItem(_ item: Item) {
+    private func saveItem(_ item: ItemProtocol) {
         let activityName = DeviceActivityName(for: item)
         let config = ItemConfig(from: item)
 
@@ -75,13 +75,21 @@ final class BlockController {
         SharedDefaults.shared.removeObject(forKey: activityName.rawValue)
     }
 
-    func useOpen(for item: Item) {
+    func useOpen(for item: ItemProtocol) {
         guard item.blockMode == .opens, item.opensConfig.openLeft > 0 else { return }
+        var item = item
 
         item.opensConfig.openLeft -= 1
         saveItem(item)
         clearShield(for: item)
         createThreshold(for: item, threshold: item.opensConfig.allowedPerOpen * 60)
+    }
+
+    private func saveConfig(_ config: ItemConfig) {
+        let activityName = DeviceActivityName(for: config)
+        if let data = try? JSONEncoder().encode(config) {
+            SharedDefaults.shared.set(data, forKey: activityName.rawValue)
+        }
     }
 
     func applyShield(for item: ItemProtocol) {
