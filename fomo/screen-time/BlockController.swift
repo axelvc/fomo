@@ -8,6 +8,7 @@
 import DeviceActivity
 import Foundation
 import ManagedSettings
+import FamilyControls
 
 extension DeviceActivityName {
     init(for item: ItemProtocol) {
@@ -94,7 +95,7 @@ final class BlockController {
 
     func applyShield(for item: ItemProtocol) {
         let store = store(for: item)
-        store.shield.applications = item.apps
+        store.shield.applications = item.activitySelection.applicationTokens
     }
 
     func clearShield(for item: ItemProtocol) {
@@ -142,7 +143,7 @@ final class BlockController {
 
         let thresholdComponents = DateComponents(second: threshold)
         let limitEvent = DeviceActivityEvent(
-            applications: item.apps,
+            applications: item.activitySelection.applicationTokens,
             threshold: thresholdComponents
         )
 

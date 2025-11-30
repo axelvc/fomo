@@ -5,6 +5,7 @@
 //  Created by Axel on 29/11/25.
 //
 
+import FamilyControls
 import Foundation
 import ManagedSettings
 import ManagedSettingsUI
@@ -21,7 +22,7 @@ private func retrieveConfig(for token: ApplicationToken) -> ItemConfig? {
             let config = try? JSONDecoder().decode(ItemConfig.self, from: data)
         else { continue }
 
-        if config.apps.contains(token) {
+        if config.activitySelection.applicationTokens.contains(token) {
             return config
         }
     }

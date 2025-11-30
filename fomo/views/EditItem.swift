@@ -19,7 +19,6 @@ struct EditItemView: View {
 
     @State private var auth = ScreenTimeAuthorization()
     @State private var showAppPicker = false
-    @State private var activitySelection: FamilyActivitySelection = .init()
 
     let startDate = Date.now
 
@@ -45,15 +44,12 @@ struct EditItemView: View {
                     icon: "apps.iphone",
                     action: { showAppPicker.toggle() }
                 ) {
-                    Text("\(item.apps.count) apps")
+                    Text("\(item.activitySelection.applicationTokens.count) apps")
                 }
                 .familyActivityPicker(
                     isPresented: $showAppPicker,
-                    selection: $activitySelection
+                    selection: $item.activitySelection
                 )
-                .onChange(of: activitySelection) {
-                    item.apps = activitySelection.applicationTokens
-                }
             }
 
             Section {

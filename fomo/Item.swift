@@ -8,13 +8,14 @@
 import Foundation
 import ManagedSettings
 import SwiftData
+import FamilyControls
 
 @Model
 final class Item: ItemProtocol {
     @Attribute(.unique)
     var id: UUID
     var name: String
-    var apps: Set<ApplicationToken>
+    var activitySelection: FamilyActivitySelection
     var breakMode: BreakMode
 
     var timerDuration: Duration
@@ -35,7 +36,7 @@ final class Item: ItemProtocol {
     init() {
         self.id = UUID()
         self.name = ""
-        self.apps = []
+        self.activitySelection = .init()
         self._blockMode = .timer
         self.breakMode = .relaxed
         self.timerDuration = .init()
@@ -61,7 +62,7 @@ final class Item: ItemProtocol {
         if name.isEmpty { return false }
 
         #if !targetEnvironment(simulator)
-            if apps.isEmpty { return false }
+            if activitySelection.applicationTokens.isEmpty { return false }
         #endif
 
         return switch blockMode {
@@ -130,10 +131,10 @@ struct OpensConfig: Codable {
     var allowedPerOpen: Int = 0
 }
 
-struct ItemConfig: Codable, ItemProtocol {
+struct ItemConfig: ItemProtocol, Codable {
     let id: UUID
     var blockMode: BlockMode
-    var apps: Set<ApplicationToken>
+    var activitySelection: FamilyActivitySelection
     var timerDuration: Duration
     var scheduleWindow: ScheduleWindow
     var limitConfig: LimitConfig
@@ -142,7 +143,7 @@ struct ItemConfig: Codable, ItemProtocol {
     init(from item: ItemProtocol) {
         self.id = item.id
         self.blockMode = item.blockMode
-        self.apps = item.apps
+        self.activitySelection = item.activitySelection
         self.timerDuration = item.timerDuration
         self.scheduleWindow = item.scheduleWindow
         self.limitConfig = item.limitConfig
@@ -153,7 +154,7 @@ struct ItemConfig: Codable, ItemProtocol {
 protocol ItemProtocol {
     var id: UUID { get }
     var blockMode: BlockMode { get }
-    var apps: Set<ApplicationToken> { get }
+    var activitySelection: FamilyActivitySelection { get }
     var timerDuration: Duration { get }
     var scheduleWindow: ScheduleWindow { get }
     var limitConfig: LimitConfig { get }
