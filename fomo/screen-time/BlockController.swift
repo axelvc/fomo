@@ -44,7 +44,7 @@ final class BlockController {
             try? createScheduled(
                 for: item,
                 start: .now,
-                end: .now.addingTimeInterval(TimeInterval(item.timerDuration.totalSeconds))
+                end: .now.addingTimeInterval(item.timerDuration)
             )
         case .schedule:
             // Block during window
@@ -55,7 +55,7 @@ final class BlockController {
             )
         case .limit:
             // Monitor usage, block when limit reached
-            createThreshold(for: item, threshold: item.limitConfig.freeTime.totalSeconds)
+            createThreshold(for: item, threshold: item.limitConfig.freeTime)
         case .opens:
             // Block immediately (forever/until used)
             applyShield(for: item)
@@ -83,7 +83,7 @@ final class BlockController {
         item.opensConfig.openLeft -= 1
         saveItem(item)
         clearShield(for: item)
-        createThreshold(for: item, threshold: item.opensConfig.allowedPerOpen * 60)
+        createThreshold(for: item, threshold: TimeInterval(minutes: item.opensConfig.allowedPerOpen))
     }
 
     private func saveConfig(_ config: ItemConfig) {
@@ -128,7 +128,7 @@ final class BlockController {
         )
     }
 
-    func createThreshold(for item: ItemProtocol, threshold: Int) {
+    func createThreshold(for item: ItemProtocol, threshold: TimeInterval) {
         let center = DeviceActivityCenter()
         let activityName = DeviceActivityName(for: item)
 
@@ -141,7 +141,7 @@ final class BlockController {
             repeats: true
         )
 
-        let thresholdComponents = DateComponents(second: threshold)
+        let thresholdComponents = DateComponents(second: Int(threshold))
         let limitEvent = DeviceActivityEvent(
             applications: item.activitySelection.applicationTokens,
             threshold: thresholdComponents

@@ -107,7 +107,7 @@ struct ItemPreview: View {
         }
     }
 
-    private func formattedDuration(_ duration: Duration) -> String {
+    private func formattedDuration(_ duration: TimeInterval) -> String {
         let hour = duration.hours
         let minute = duration.minutes
 
@@ -164,7 +164,7 @@ struct ScheduleTimer: View {
     .onAppear {
         timer.name = "Timer blocker"
         timer.blockMode = .timer
-        timer.timerDuration = .init(hours: 0, minutes: 5)
+        timer.timerDuration = TimeInterval(hours: 0, minutes: 5)
 
         schedule.name = "Schedule blocker"
         schedule.blockMode = .schedule
@@ -174,7 +174,7 @@ struct ScheduleTimer: View {
         limit.name = "Limit blocker"
         limit.blockMode = .limit
         limit.limitConfig = .init(
-            freeTime: .init(hours: 0, minutes: 5), breakTime: .init(hours: 0, minutes: 8))
+            freeTime: TimeInterval(hours: 0, minutes: 5), breakTime: TimeInterval(hours: 0, minutes: 8))
 
         opens.name = "Opens blocker"
         opens.blockMode = .opens

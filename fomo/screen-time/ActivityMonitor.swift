@@ -67,7 +67,7 @@ extension ActivityMonitor {
         if config.blockMode == .limit {
             BlockController.shared.createThreshold(
                 for: config,
-                threshold: config.limitConfig.freeTime.totalSeconds
+                threshold: config.limitConfig.freeTime
             )
         }
     }
@@ -76,7 +76,7 @@ extension ActivityMonitor {
         try? BlockController.shared.createScheduled(
             for: config,
             start: .now,
-            end: .now.addingTimeInterval(TimeInterval(config.limitConfig.breakTime.totalSeconds))
+            end: .now.addingTimeInterval(config.limitConfig.breakTime)
         )
     }
 

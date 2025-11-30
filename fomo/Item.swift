@@ -18,7 +18,7 @@ final class Item: ItemProtocol {
     var activitySelection: FamilyActivitySelection
     var breakMode: BreakMode
 
-    var timerDuration: Duration
+    var timerDuration: TimeInterval
     var scheduleWindow: ScheduleWindow
     var limitConfig: LimitConfig
     var opensConfig: OpensConfig
@@ -39,7 +39,7 @@ final class Item: ItemProtocol {
         self.activitySelection = .init()
         self._blockMode = .timer
         self.breakMode = .relaxed
-        self.timerDuration = .init()
+        self.timerDuration = 0
         self.scheduleWindow = .init()
         self.limitConfig = .init()
         self.opensConfig = .init()
@@ -48,7 +48,7 @@ final class Item: ItemProtocol {
     private func resetLimitMode() {
         switch blockMode {
         case .timer:
-            timerDuration = .init()
+            timerDuration = 0
         case .schedule:
             scheduleWindow = .init()
         case .limit:
@@ -67,12 +67,12 @@ final class Item: ItemProtocol {
 
         return switch blockMode {
         case .timer:
-            timerDuration.totalSeconds > 0
+            timerDuration > 0
         case .schedule:
             scheduleWindow.start != scheduleWindow.end
         case .limit:
-            limitConfig.freeTime.totalSeconds > 0
-                && limitConfig.breakTime.totalSeconds > 0
+            limitConfig.freeTime > 0
+                && limitConfig.breakTime > 0
         case .opens:
             opensConfig.opens > 0
                 && opensConfig.allowedPerOpen > 0
@@ -94,13 +94,6 @@ enum BlockMode: String, Codable, CaseIterable, Identifiable {
     var title: String { self.rawValue.capitalized }
 }
 
-struct Duration: Codable {
-    var hours: Int = 0
-    var minutes: Int = 0
-
-    var totalSeconds: Int { hours * 3600 + minutes * 60 }
-}
-
 struct ScheduleWindow: Codable {
     var start: Date
     var end: Date
@@ -110,9 +103,9 @@ struct ScheduleWindow: Codable {
         self.end = end
     }
 
-    init(of duration: Duration) {
+    init(of interval: TimeInterval) {
         start = .now
-        end = start.addingTimeInterval(TimeInterval(duration.totalSeconds))
+        end = start.addingTimeInterval(interval)
     }
 
     private static var emptyDate: Date {
@@ -121,8 +114,8 @@ struct ScheduleWindow: Codable {
 }
 
 struct LimitConfig: Codable {
-    var freeTime: Duration = .init()
-    var breakTime: Duration = .init()
+    var freeTime: TimeInterval = 0
+    var breakTime: TimeInterval = 0
 }
 
 struct OpensConfig: Codable {
@@ -135,7 +128,7 @@ struct ItemConfig: ItemProtocol, Codable {
     let id: UUID
     var blockMode: BlockMode
     var activitySelection: FamilyActivitySelection
-    var timerDuration: Duration
+    var timerDuration: TimeInterval
     var scheduleWindow: ScheduleWindow
     var limitConfig: LimitConfig
     var opensConfig: OpensConfig
@@ -155,7 +148,7 @@ protocol ItemProtocol {
     var id: UUID { get }
     var blockMode: BlockMode { get }
     var activitySelection: FamilyActivitySelection { get }
-    var timerDuration: Duration { get }
+    var timerDuration: TimeInterval { get }
     var scheduleWindow: ScheduleWindow { get }
     var limitConfig: LimitConfig { get }
     var opensConfig: OpensConfig { get set }

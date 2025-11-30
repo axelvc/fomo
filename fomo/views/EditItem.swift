@@ -104,11 +104,25 @@ struct EditItemView: View {
 }
 
 struct DurationPicker: View {
-    @Binding var duration: Duration
+    @Binding var duration: TimeInterval
     var label: String
     var icon: String
 
     @State private var popupOn = false
+
+    private var hours: Binding<Int> {
+        Binding(
+            get: { duration.hours },
+            set: { duration = TimeInterval(hours: $0, minutes: duration.minutes) }
+        )
+    }
+
+    private var minutes: Binding<Int> {
+        Binding(
+            get: { duration.minutes },
+            set: { duration = TimeInterval(hours: duration.hours, minutes: $0) }
+        )
+    }
 
     var body: some View {
         CustomButton(label: label, icon: icon, action: { popupOn.toggle() }) {
@@ -122,7 +136,7 @@ struct DurationPicker: View {
         }
         .popover(isPresented: $popupOn) {
             HStack(spacing: 0) {
-                Picker("Hour", selection: $duration.hours) {
+                Picker("Hour", selection: hours) {
                     ForEach(0..<24) { n in
                         Text("\(n)")
                     }
@@ -131,7 +145,7 @@ struct DurationPicker: View {
 
                 Text(":")
 
-                Picker("Minute", selection: $duration.minutes) {
+                Picker("Minute", selection: minutes) {
                     ForEach(0..<60) { n in
                         Text("\(n)")
                     }
