@@ -5,10 +5,9 @@
 //  Created by Axel on 17/11/25.
 //
 
-import Foundation
-import ManagedSettings
-import SwiftData
 import FamilyControls
+import Foundation
+import SwiftData
 
 @Model
 final class Item: ItemProtocol {
@@ -19,7 +18,7 @@ final class Item: ItemProtocol {
     var breakMode: BreakMode
 
     var timerDuration: TimeInterval
-    var scheduleWindow: ScheduleWindow
+    var scheduleWindow: DateInterval
     var limitConfig: LimitConfig
     var opensConfig: OpensConfig
 
@@ -40,7 +39,7 @@ final class Item: ItemProtocol {
         self._blockMode = .timer
         self.breakMode = .relaxed
         self.timerDuration = 0
-        self.scheduleWindow = .init()
+        self.scheduleWindow = .zero
         self.limitConfig = .init()
         self.opensConfig = .init()
     }
@@ -50,7 +49,7 @@ final class Item: ItemProtocol {
         case .timer:
             timerDuration = 0
         case .schedule:
-            scheduleWindow = .init()
+            scheduleWindow = .zero
         case .limit:
             limitConfig = .init()
         case .opens:
@@ -69,7 +68,7 @@ final class Item: ItemProtocol {
         case .timer:
             timerDuration > 0
         case .schedule:
-            scheduleWindow.start != scheduleWindow.end
+            scheduleWindow.duration > 0
         case .limit:
             limitConfig.freeTime > 0
                 && limitConfig.breakTime > 0
@@ -94,25 +93,6 @@ enum BlockMode: String, Codable, CaseIterable, Identifiable {
     var title: String { self.rawValue.capitalized }
 }
 
-struct ScheduleWindow: Codable {
-    var start: Date
-    var end: Date
-
-    init(start: Date = emptyDate, end: Date = emptyDate) {
-        self.start = start
-        self.end = end
-    }
-
-    init(of interval: TimeInterval) {
-        start = .now
-        end = start.addingTimeInterval(interval)
-    }
-
-    private static var emptyDate: Date {
-        Calendar.current.startOfDay(for: Date())
-    }
-}
-
 struct LimitConfig: Codable {
     var freeTime: TimeInterval = 0
     var breakTime: TimeInterval = 0
@@ -120,7 +100,7 @@ struct LimitConfig: Codable {
 
 struct OpensConfig: Codable {
     var opens: Int = 0
-    var openLeft = 0
+    var opensLeft: Int = 0
     var allowedPerOpen: Int = 0
 }
 
@@ -129,7 +109,7 @@ struct ItemConfig: ItemProtocol, Codable {
     var blockMode: BlockMode
     var activitySelection: FamilyActivitySelection
     var timerDuration: TimeInterval
-    var scheduleWindow: ScheduleWindow
+    var scheduleWindow: DateInterval
     var limitConfig: LimitConfig
     var opensConfig: OpensConfig
 
@@ -149,7 +129,7 @@ protocol ItemProtocol {
     var blockMode: BlockMode { get }
     var activitySelection: FamilyActivitySelection { get }
     var timerDuration: TimeInterval { get }
-    var scheduleWindow: ScheduleWindow { get }
+    var scheduleWindow: DateInterval { get }
     var limitConfig: LimitConfig { get }
     var opensConfig: OpensConfig { get set }
 }

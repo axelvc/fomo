@@ -77,10 +77,10 @@ final class BlockController {
     }
 
     func useOpen(for item: ItemProtocol) {
-        guard item.blockMode == .opens, item.opensConfig.openLeft > 0 else { return }
+        guard item.blockMode == .opens, item.opensConfig.opensLeft > 0 else { return }
         var item = item
 
-        item.opensConfig.openLeft -= 1
+        item.opensConfig.opensLeft -= 1
         saveItem(item)
         clearShield(for: item)
         createThreshold(for: item, threshold: TimeInterval(minutes: item.opensConfig.allowedPerOpen))

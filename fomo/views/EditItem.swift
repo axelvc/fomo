@@ -159,21 +159,52 @@ struct DurationPicker: View {
 }
 
 struct SchedulePicker: View {
-    @Binding var scheduleWindow: ScheduleWindow
+    @Binding var scheduleWindow: DateInterval
+
+    private var startDate: Binding<Date> {
+        Binding(
+            get: { scheduleWindow.start },
+            set: { newStart in
+                scheduleWindow = adjustedDateInterval(start: newStart, end: scheduleWindow.end)
+            }
+        )
+    }
+
+    private var endDate: Binding<Date> {
+        Binding(
+            get: { scheduleWindow.end },
+            set: { newEnd in
+                scheduleWindow = adjustedDateInterval(start: scheduleWindow.start, end: newEnd)
+            }
+        )
+    }
 
     var body: some View {
         SchedulePickerButton(
             label: "From",
             icon: "calendar.badge.clock",
-            date: $scheduleWindow.start,
+            date: startDate,
         )
         SchedulePickerButton(
             label: "To",
             icon: "calendar",
-            date: $scheduleWindow.end,
+            date: endDate,
         )
     }
 
+    private func adjustedDateInterval(start: Date, end: Date) -> DateInterval {
+        let calendar = Calendar.current
+        let startDay = calendar.startOfDay(for: start)
+        let endComponents = calendar.dateComponents([.hour, .minute], from: end)
+        var adjustedEnd = calendar.date(bySettingHour: endComponents.hour!, minute: endComponents.minute!, second: 0, of: startDay)!
+
+        if adjustedEnd <= start {
+            adjustedEnd = calendar.date(byAdding: .day, value: 1, to: adjustedEnd)!
+        }
+
+        return DateInterval(start: start, end: adjustedEnd)
+    }
+    
     private struct SchedulePickerButton: View {
         let label: String
         let icon: String

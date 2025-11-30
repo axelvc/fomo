@@ -168,8 +168,7 @@ struct ScheduleTimer: View {
 
         schedule.name = "Schedule blocker"
         schedule.blockMode = .schedule
-        let date = Date.now.addingTimeInterval(30)
-        schedule.scheduleWindow = .init(start: date, end: date.addingTimeInterval(60))
+        schedule.scheduleWindow = .init(start: .now.addingTimeInterval(10), duration: TimeInterval(60))
 
         limit.name = "Limit blocker"
         limit.blockMode = .limit
