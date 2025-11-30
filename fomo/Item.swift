@@ -17,7 +17,6 @@ final class Item: ItemProtocol {
     var activitySelection: FamilyActivitySelection
     var breakMode: BreakMode
 
-    var timerDuration: TimeInterval
     var scheduleWindow: DateInterval
     var limitConfig: LimitConfig
     var opensConfig: OpensConfig
@@ -38,8 +37,7 @@ final class Item: ItemProtocol {
         self.activitySelection = .init()
         self._blockMode = .timer
         self.breakMode = .relaxed
-        self.timerDuration = 0
-        self.scheduleWindow = .zero
+        self.scheduleWindow = .init()
         self.limitConfig = .init()
         self.opensConfig = .init()
     }
@@ -47,7 +45,7 @@ final class Item: ItemProtocol {
     private func resetLimitMode() {
         switch blockMode {
         case .timer:
-            timerDuration = 0
+            scheduleWindow = .init()
         case .schedule:
             scheduleWindow = .zero
         case .limit:
@@ -65,9 +63,7 @@ final class Item: ItemProtocol {
         #endif
 
         return switch blockMode {
-        case .timer:
-            timerDuration > 0
-        case .schedule:
+        case .timer, .schedule:
             scheduleWindow.duration > 0
         case .limit:
             limitConfig.freeTime > 0
@@ -109,7 +105,6 @@ struct ItemConfig: ItemProtocol, Codable {
     var blockMode: BlockMode
     var breakMode: BreakMode
     var activitySelection: FamilyActivitySelection
-    var timerDuration: TimeInterval
     var scheduleWindow: DateInterval
     var limitConfig: LimitConfig
     var opensConfig: OpensConfig
@@ -119,7 +114,6 @@ struct ItemConfig: ItemProtocol, Codable {
         self.blockMode = item.blockMode
         self.breakMode = item.breakMode
         self.activitySelection = item.activitySelection
-        self.timerDuration = item.timerDuration
         self.scheduleWindow = item.scheduleWindow
         self.limitConfig = item.limitConfig
         self.opensConfig = item.opensConfig
@@ -131,7 +125,6 @@ protocol ItemProtocol {
     var blockMode: BlockMode { get }
     var breakMode: BreakMode { get }
     var activitySelection: FamilyActivitySelection { get }
-    var timerDuration: TimeInterval { get }
     var scheduleWindow: DateInterval { get }
     var limitConfig: LimitConfig { get }
     var opensConfig: OpensConfig { get set }

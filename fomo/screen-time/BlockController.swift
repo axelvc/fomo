@@ -39,14 +39,7 @@ final class BlockController {
         saveItem(item)
 
         switch item.blockMode {
-        case .timer:
-            // Block immediately for duration
-            try? createScheduled(
-                for: item,
-                start: .now,
-                end: .now.addingTimeInterval(item.timerDuration)
-            )
-        case .schedule:
+        case .timer, .schedule:
             // Block during window
             try? createScheduled(
                 for: item,

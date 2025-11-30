@@ -56,7 +56,7 @@ struct ItemPreview: View {
             HStack(spacing: 0) {
                 switch item.blockMode {
                 case .timer:
-                    let duration = formattedDuration(item.timerDuration)
+                    let duration = formattedDuration(item.scheduleWindow.duration)
 
                     Text("Duration: \(duration)")
                 case .schedule:
@@ -164,7 +164,7 @@ struct ScheduleTimer: View {
     .onAppear {
         timer.name = "Timer blocker"
         timer.blockMode = .timer
-        timer.timerDuration = TimeInterval(hours: 0, minutes: 5)
+        timer.scheduleWindow.duration = TimeInterval(minutes: 5)
 
         schedule.name = "Schedule blocker"
         schedule.blockMode = .schedule

@@ -56,7 +56,7 @@ struct EditItemView: View {
                 switch item.blockMode {
                 case .timer:
                     DurationPicker(
-                        duration: $item.timerDuration,
+                        duration: $item.scheduleWindow.duration,
                         label: "Duration",
                         icon: "timer"
                     )
@@ -91,6 +91,10 @@ struct EditItemView: View {
     }
 
     func saveItem() {
+        if isNew && item.blockMode == .timer {
+            item.scheduleWindow.start = .now
+        }
+
         if !isNew {
             BlockController.shared.stopMonitoring(for: item)
         }
@@ -196,7 +200,9 @@ struct SchedulePicker: View {
         let calendar = Calendar.current
         let startDay = calendar.startOfDay(for: start)
         let endComponents = calendar.dateComponents([.hour, .minute], from: end)
-        var adjustedEnd = calendar.date(bySettingHour: endComponents.hour!, minute: endComponents.minute!, second: 0, of: startDay)!
+        var adjustedEnd = calendar.date(
+            bySettingHour: endComponents.hour!, minute: endComponents.minute!, second: 0,
+            of: startDay)!
 
         if adjustedEnd <= start {
             adjustedEnd = calendar.date(byAdding: .day, value: 1, to: adjustedEnd)!
@@ -204,7 +210,7 @@ struct SchedulePicker: View {
 
         return DateInterval(start: start, end: adjustedEnd)
     }
-    
+
     private struct SchedulePickerButton: View {
         let label: String
         let icon: String
