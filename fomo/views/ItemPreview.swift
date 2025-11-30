@@ -59,15 +59,15 @@ struct ItemPreview: View {
                     let duration = formattedDuration(item.scheduleWindow.duration)
 
                     Text("Duration: \(duration)")
+                    Spacer()
+                    ScheduleTimer(dateInterval: item.scheduleWindow)
                 case .schedule:
                     Text("Window: ")
                     Text(item.scheduleWindow.start, style: .time)
                     Text(" - ")
                     Text(item.scheduleWindow.end, style: .time)
-
                     Spacer()
-
-                    ScheduleTimer(start: item.scheduleWindow.start, end: item.scheduleWindow.end)
+                    ScheduleTimer(dateInterval: item.scheduleWindow)
                 case .limit:
                     let free = formattedDuration(item.limitConfig.freeTime)
                     let blocked = formattedDuration(item.limitConfig.breakTime)
@@ -120,8 +120,10 @@ struct ItemPreview: View {
 }
 
 struct ScheduleTimer: View {
-    var start: Date
-    var end: Date
+    var dateInterval: DateInterval
+
+    private var start: Date { dateInterval.start }
+    private var end: Date { dateInterval.end }
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -164,7 +166,7 @@ struct ScheduleTimer: View {
     .onAppear {
         timer.name = "Timer blocker"
         timer.blockMode = .timer
-        timer.scheduleWindow.duration = TimeInterval(minutes: 5)
+        timer.scheduleWindow = .init(start: .now, duration: TimeInterval(minutes: 5))
 
         schedule.name = "Schedule blocker"
         schedule.blockMode = .schedule
